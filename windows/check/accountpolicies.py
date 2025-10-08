@@ -282,7 +282,6 @@ def main():
     # Check if running on Windows
     check_windows_os()
     
-    # Check for administrator privileges
     if not is_admin():
         print(f"{Colors.RED}[ERROR]{Colors.END} Administrator privileges required")
         admin.admin()
@@ -303,11 +302,10 @@ def main():
         # Check password policies
         password_compliant = check_password_policies(policy_data)
         
-        # Check account lockout policies
         lockout_compliant = check_account_lockout_policies(policy_data)
         
 
-        print(f"\n{Colors.BOLD}OVERALL COMPLIANCE SUMMARY{Colors.END}")
+        print(f"\n{Colors.BOLD}Account Policies Summary{Colors.END}")
         print(f"{Colors.BLUE}={Colors.END}" * 80)
         
         password_status = f"{Colors.GREEN}COMPLIANT{Colors.END}" if password_compliant else f"{Colors.RED}NON-COMPLIANT{Colors.END}"
@@ -324,3 +322,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    subprocess.run(["python","localpolicies.py"])
