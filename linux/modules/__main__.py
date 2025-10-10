@@ -8,14 +8,16 @@ import importlib
 from pathlib import Path
 
 from firewall import FirewallModule
+from filesystem import FilesystemModule
+from boot_process import BootProcessModule
 
 # List of all Linux module names (9 total, aligned with Annexure B)
 MODULES: list = [
-    FirewallModule
+    FirewallModule,
+    FilesystemModule,
+    BootProcessModule
 ]
 """
-    "filesystem",
-    "boot_process",
     "network",
     "services",
     "accounts",
