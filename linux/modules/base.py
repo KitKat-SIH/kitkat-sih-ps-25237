@@ -77,3 +77,17 @@ class BaseHardeningModule(ABC):
         }
         self.report.append(entry)
         return entry
+
+
+
+# ---------------------- Color Formatting (matches Windows tool) ----------------------
+
+class Colors:
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
+
