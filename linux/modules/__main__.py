@@ -10,22 +10,27 @@ from pathlib import Path
 from firewall import FirewallModule
 from filesystem import FilesystemModule
 from boot_process import BootProcessModule
+from network import NetworkModule
+from services import ServicesModule
+from accounts import AccountsModule
+from access_control import AccessControlModule
+from auditd import AuditdModule
+from maintenance import MaintenanceModule
+
 
 # List of all Linux module names (9 total, aligned with Annexure B)
 MODULES: list = [
     FirewallModule,
     FilesystemModule,
-    BootProcessModule
+    BootProcessModule,
+    NetworkModule,
+    ServicesModule,
+    AccountsModule,
+    AccessControlModule,
+    AuditdModule,
+    MaintenanceModule,
 ]
-"""
-    "network",
-    "services",
-    "accounts",
-    "access_control",
-    "auditd",
-    "maintenance"
-]
-"""
+
 
 
 def run(context):
