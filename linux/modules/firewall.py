@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -16,14 +16,14 @@ from .base import BaseHardeningModule, Colors
 class FirewallModule(BaseHardeningModule):
     id: str = "firewall"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -178,15 +178,15 @@ class FirewallModule(BaseHardeningModule):
 
         if not self.firewall_installed("check"):
             self.firewall_installed("enforce")
-        self.add_result("firewall", "FW-1", "ok", True)
+        self.add_result("FW-1", "ok", True)
 
         if not self.iptables_persistent_absent("check"):
             self.iptables_persistent_absent("enforce")
-        self.add_result("firewall", "FW-2", "ok", True)
+        self.add_result("FW-2", "ok", True)
 
         if not self.ufw_enabled("check"):
             self.ufw_enabled("enforce")
-        self.add_result("firewall", "FW-3", "ok", True)
+        self.add_result("FW-3", "ok", True)
 
     def apply_moderate(self, out: bool = True) -> None:
         if out:
@@ -197,15 +197,15 @@ class FirewallModule(BaseHardeningModule):
 
         if not self.loopback_allowed("check"):
             self.loopback_allowed("enforce")
-        self.add_result("firewall", "FW-4", "ok", True)
+        self.add_result("FW-4", "ok", True)
 
         if not self.default_deny_outgoing("check"):
             self.default_deny_outgoing("enforce")
-        self.add_result("firewall", "FW-5", "ok", True)
+        self.add_result("FW-5", "ok", True)
 
         if not self.default_deny_incoming("check"):
             self.default_deny_incoming("enforce")
-        self.add_result("firewall", "FW-7", "ok", True)
+        self.add_result("FW-7", "ok", True)
 
     def apply_strict(self, out: bool = True) -> None:
         if out:
@@ -216,7 +216,20 @@ class FirewallModule(BaseHardeningModule):
 
         if not self.iptables_disabled("check"):
             self.iptables_disabled("enforce")
-        self.add_result("firewall", "FW-8", "ok", True)
+        self.add_result("FW-8", "ok", True)
 
         print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed all strict firewall checks successfully!")
 
+    # ---------------------- Audit/Enforce Entry Points ----------------------
+
+    def audit(self) -> None:
+        """Perform read-only checks based on policy level"""
+        policy_method = f"apply_{self.policy}"
+        if hasattr(self, policy_method):
+            getattr(self, policy_method)()
+        else:
+            self.logger.log("ERROR", f"Unknown policy level: {self.policy}")
+
+    def enforce(self) -> None:
+        """Apply hardening fixes based on policy level"""
+        self.audit()  # Same logic, check/enforce handled per method

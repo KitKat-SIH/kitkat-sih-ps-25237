@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class ServicesModule(BaseHardeningModule):
     id: str = "services"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -490,7 +490,7 @@ class ServicesModule(BaseHardeningModule):
 
         # Configure job schedulers (most critical)
         result = self.configure_job_schedulers("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("services", "SRV-36-43", "ok", result)
+        self.add_result("SRV-36-43", "ok", result)
 
         print(f"\n{Colors.BOLD}Services Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -505,11 +505,11 @@ class ServicesModule(BaseHardeningModule):
 
         # Configure client services
         result = self.configure_client_services("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("services", "SRV-23-28", "ok", result)
+        self.add_result("SRV-23-28", "ok", result)
 
         # Configure time synchronization
         result = self.configure_time_synchronization("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("services", "SRV-29-35", "ok", result)
+        self.add_result("SRV-29-35", "ok", result)
 
         print(f"\n{Colors.BOLD}Services Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -526,7 +526,7 @@ class ServicesModule(BaseHardeningModule):
 
         # Configure server services (most aggressive)
         result = self.configure_server_services("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("services", "SRV-1-22", "ok", result)
+        self.add_result("SRV-1-22", "ok", result)
 
         print(f"\n{Colors.BOLD}Services Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

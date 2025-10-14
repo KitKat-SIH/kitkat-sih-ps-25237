@@ -1,6 +1,6 @@
 # logger.py
 """
-Simple synchronous logger for MP-Hardener.
+Simple synchronous logger for hardn.
 Writes messages to a specified log file and optionally echoes to stdout.
 """
 

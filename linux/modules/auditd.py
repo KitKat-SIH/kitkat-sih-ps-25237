@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class AuditdModule(BaseHardeningModule):
     id: str = "auditd"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -785,7 +785,7 @@ fi
 
         # Configure system logging (most fundamental)
         result = self.configure_system_logging("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("auditd", "AUD-1-12", "ok", result)
+        self.add_result("AUD-1-12", "ok", result)
 
         print(f"\n{Colors.BOLD}Auditd Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -800,11 +800,11 @@ fi
 
         # Configure auditd service
         result = self.configure_auditd_service("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("auditd", "AUD-13-20", "ok", result)
+        self.add_result("AUD-13-20", "ok", result)
 
         # Configure auditd file access
         result = self.configure_auditd_file_access("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("auditd", "AUD-42-51", "ok", result)
+        self.add_result("AUD-42-51", "ok", result)
 
         print(f"\n{Colors.BOLD}Auditd Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -821,11 +821,11 @@ fi
 
         # Configure comprehensive audit rules
         result = self.configure_auditd_rules("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("auditd", "AUD-21-41", "ok", result)
+        self.add_result("AUD-21-41", "ok", result)
 
         # Configure integrity checking
         result = self.configure_integrity_checking("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("auditd", "AUD-52-54", "ok", result)
+        self.add_result("AUD-52-54", "ok", result)
 
         print(f"\n{Colors.BOLD}Auditd Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

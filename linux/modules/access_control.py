@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class AccessControlModule(BaseHardeningModule):
     id: str = "access_control"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -546,7 +546,7 @@ class AccessControlModule(BaseHardeningModule):
 
         # Configure privilege escalation (most critical)
         result = self.configure_privilege_escalation("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("access_control", "AC-23-29", "ok", result)
+        self.add_result("AC-23-29", "ok", result)
 
         print(f"\n{Colors.BOLD}Access Control Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -561,7 +561,7 @@ class AccessControlModule(BaseHardeningModule):
 
         # Configure PAM
         result = self.configure_pam("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("access_control", "AC-30-50", "ok", result)
+        self.add_result("AC-30-50", "ok", result)
 
         print(f"\n{Colors.BOLD}Access Control Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -577,7 +577,7 @@ class AccessControlModule(BaseHardeningModule):
 
         # Configure SSH server (most aggressive)
         result = self.configure_ssh_server("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("access_control", "AC-1-22", "ok", result)
+        self.add_result("AC-1-22", "ok", result)
 
         print(f"\n{Colors.BOLD}Access Control Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

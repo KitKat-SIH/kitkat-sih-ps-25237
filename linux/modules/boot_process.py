@@ -7,7 +7,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -16,14 +16,14 @@ from .base import BaseHardeningModule, Colors
 class BootProcessModule(BaseHardeningModule):
     id: str = "boot_process"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -343,7 +343,7 @@ class BootProcessModule(BaseHardeningModule):
 
         # Configure bootloader (always manual for password)
         result = self.configure_bootloader("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("boot_process", "BP-1-2", "ok", result)
+        self.add_result("BP-1-2", "ok", result)
 
         print(f"\n{Colors.BOLD}Boot Process Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -358,7 +358,7 @@ class BootProcessModule(BaseHardeningModule):
 
         # Configure process hardening
         result = self.configure_process_hardening("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("boot_process", "BP-3-7", "ok", result)
+        self.add_result("BP-3-7", "ok", result)
 
         print(f"\n{Colors.BOLD}Boot Process Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -374,7 +374,7 @@ class BootProcessModule(BaseHardeningModule):
 
         # Configure warning banners
         result = self.configure_warning_banners("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("boot_process", "BP-8-12", "ok", result)
+        self.add_result("BP-8-12", "ok", result)
 
         print(f"\n{Colors.BOLD}Boot Process Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

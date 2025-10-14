@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class AccountsModule(BaseHardeningModule):
     id: str = "accounts"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -496,7 +496,7 @@ class AccountsModule(BaseHardeningModule):
 
         # Configure shadow password suite
         result = self.configure_shadow_password_suite("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("accounts", "ACC-1-6", "ok", result)
+        self.add_result("ACC-1-6", "ok", result)
 
         print(f"\n{Colors.BOLD}Accounts Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -511,7 +511,7 @@ class AccountsModule(BaseHardeningModule):
 
         # Configure user default environment
         result = self.configure_user_default_environment("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("accounts", "ACC-15-17", "ok", result)
+        self.add_result("ACC-15-17", "ok", result)
 
         print(f"\n{Colors.BOLD}Accounts Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -527,7 +527,7 @@ class AccountsModule(BaseHardeningModule):
 
         # Configure root and system accounts
         result = self.configure_root_system_accounts("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("accounts", "ACC-7-14", "ok", result)
+        self.add_result("ACC-7-14", "ok", result)
 
         print(f"\n{Colors.BOLD}Accounts Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

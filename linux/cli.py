@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
 cli.py
-Main entry point for MP-Hardener.
+Main entry point for hardn.
 Handles command-line arguments and dispatches to internal modules.
 """
 
 import argparse
 import sys
 import json
+import os
+import datetime
+import platform
+import subprocess
 from pathlib import Path
+from typing import Any, Dict
 
 # Internal imports
-from hardn.modules import __main__ as hardn_main
+from modules import __main__ as hardn_main
 import rollback
-import report
 from logger import SimpleLogger
 
 
-def build_parser():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="hardn",
         description="Multi-Platform System Hardening Tool (Linux edition)"
@@ -28,25 +32,25 @@ def build_parser():
                         help="Audit the system for compliance only (no changes).")
     parser.add_argument("--enforce", action="store_true",
                         help="Audit and then enforce compliance.")
-    parser.add_argument("--rollback", metavar="<checkpoint>",
-                        help="Restore configuration from a given checkpoint ID.")
+
+    # Rollback / checkpoint system
+    parser.add_argument("--checkpoint", metavar="NAME",
+                        help="Create a named checkpoint before enforcement.")
+    parser.add_argument("--list-checkpoints", action="store_true",
+                        help="List all available checkpoints.")
+    parser.add_argument("--restore-checkpoint", metavar="NAME",
+                        help="Restore system to the specified checkpoint.")
 
     # Policy & privilege
     parser.add_argument("--policy", choices=["basic", "moderate", "strict"],
                         default="basic", help="Select hardening policy level.")
-    parser.add_argument("--privileged", action="store_true",
-                        help="Run with elevated privileges (requires sudo).")
 
     # Output options
     parser.add_argument("--json", metavar="FILE", nargs="?",
                         const="-",
                         help="Write JSON report to file (or stdout if '-')")
-    parser.add_argument("--checkpoint", metavar="NAME",
-                        help="Create a named checkpoint before enforcement.")
-    parser.add_argument("--list-checkpoints", action="store_true",
-                        help="List all available checkpoints.")
-    parser.add_argument("--restore-checkpoint", metavar="ID",
-                        help="Restore system to the specified checkpoint.")
+
+    # Misc
     parser.add_argument("--version", action="store_true",
                         help="Show version and exit.")
     parser.add_argument("--verbose", action="store_true",
@@ -55,7 +59,35 @@ def build_parser():
     return parser
 
 
-def main():
+def detect_os() -> str:
+    """Detect the operating system and return OS name."""
+    system = platform.system().lower()
+
+    if system == "windows":
+        return "windows"
+    elif system == "linux":
+        try:
+            result = subprocess.run(["lsb_release", "-is"],
+                                    capture_output=True, text=True, check=False)
+            if result.returncode == 0:
+                distro = result.stdout.strip().lower()
+                if "ubuntu" in distro:
+                    return "ubuntu"
+
+            if os.path.exists("/etc/redhat-release"):
+                with open("/etc/redhat-release", "r") as f:
+                    content = f.read().lower()
+                    if "centos" in content:
+                        return "centos"
+
+            return "linux"
+        except Exception:
+            return "linux"
+    else:
+        return "unknown"
+
+
+def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
@@ -63,61 +95,62 @@ def main():
         print("hardn 1.0.0")
         sys.exit(0)
 
-    # Determine mode
-    if args.rollback:
-        mode = "rollback"
-    elif args.audit:
-        mode = "audit"
-    elif args.enforce:
-        mode = "enforce"
-    elif args.list_checkpoints:
+    # Determine mode precedence
+    if args.list_checkpoints:
         mode = "list"
     elif args.restore_checkpoint:
         mode = "restore"
-    else:
-        # default to audit if nothing specified
+    elif args.enforce:
+        mode = "enforce"
+    elif args.audit:
         mode = "audit"
+    else:
+        mode = "audit"  # default
 
     # Initialize logger
     log_path = Path("/var/log/hardn.log")
     logger = SimpleLogger(log_path, verbose=args.verbose)
-    logger.log("INFO", f"Starting hardn in {mode} mode (policy={args.policy})")
+    startup_ts = datetime.datetime.now().isoformat()
+    flags = " ".join(sys.argv[1:])
+    logger.log("INFO", "=" * 10)
+    logger.log("INFO", f"{startup_ts} hardn {flags}")
+    logger.log("INFO", "=" * 10)
 
-    # Initialize shared context
-    context = {
+    # Shared context
+    context: Dict[str, Any] = {
         "logger": logger,
         "report": [],
         "policy_level": args.policy,
         "mode": mode,
-        "checkpoint": args.checkpoint,
-        "privileged": args.privileged
+        "os_name": detect_os(),
     }
 
     try:
         if mode in ("audit", "enforce"):
-            harden_main.run(context)
-        elif mode == "rollback":
-            rollback.create_checkpoint(args.rollback, logger)
-        elif mode == "restore":
-            rollback.restore_checkpoint(args.restore_checkpoint, logger)
+            # If checkpoint requested before enforcement
+            if args.checkpoint:
+                rollback.create_checkpoint(args.checkpoint, logger)
+
+            hardn_main.run(context)
+
+            # JSON report output
+            if args.json:
+                output = json.dumps(context["report"], indent=2)
+                if args.json == "-" or args.json is None:
+                    print(output)
+                else:
+                    Path(args.json).write_text(output)
+                    logger.log("INFO", f"JSON report written to {args.json}")
+
         elif mode == "list":
             rollback.list_checkpoints(logger)
+
+        elif mode == "restore":
+            rollback.restore_checkpoint(args.restore_checkpoint, logger)
+
         else:
             parser.print_help()
             sys.exit(1)
-
-        # Handle JSON output if requested
-        if args.json:
-            output = json.dumps(context["report"], indent=2)
-            if args.json == "-" or args.json is None:
-                print(output)
-            else:
-                Path(args.json).write_text(output)
-                logger.log("INFO", f"JSON report written to {args.json}")
-
-        # Generate PDF if enforcement mode succeeded
-        if mode == "enforce" and context["report"]:
-            report.generate_pdf(context["report"])
 
     except KeyboardInterrupt:
         logger.log("WARN", "Operation interrupted by user.")
@@ -125,8 +158,9 @@ def main():
         logger.log("ERROR", f"Fatal error: {e}")
         sys.exit(1)
     finally:
-        logger.log("INFO", "MP-Hardener finished.")
+        logger.log("INFO", "hardn finished.")
 
 
 if __name__ == "__main__":
     main()
+

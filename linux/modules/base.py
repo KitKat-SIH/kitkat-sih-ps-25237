@@ -1,11 +1,12 @@
 # modules/base.py
 """
-Base class for all hardening modules in MP-Hardener.
+Base class for all hardening modules in hardn.
 Defines the standard interface (audit/enforce/rollback),
 logging behavior, and the shared report mechanism.
 """
 
 import datetime
+from typing import Any
 from abc import ABC, abstractmethod
 
 
@@ -21,7 +22,7 @@ class BaseHardeningModule(ABC):
     description = "Abstract parent class for all hardening modules."
     supported_os = ["linux"]
 
-    def __init__(self, context):
+    def __init__(self, context: dict[str, Any]) -> None:
         """
         context: dict provided by orchestrator.
         Expected keys:

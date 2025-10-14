@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List, Set
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class MaintenanceModule(BaseHardeningModule):
     id: str = "maintenance"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -484,7 +484,7 @@ class MaintenanceModule(BaseHardeningModule):
 
         # Configure system file permissions (most critical)
         result = self.configure_system_file_permissions("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("maintenance", "MAINT-1-10", "ok", result)
+        self.add_result("MAINT-1-10", "ok", result)
 
         print(f"\n{Colors.BOLD}Maintenance Basic Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -499,7 +499,7 @@ class MaintenanceModule(BaseHardeningModule):
 
         # Configure user and group settings
         result = self.configure_user_group_settings("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("maintenance", "MAINT-14-21", "ok", result)
+        self.add_result("MAINT-14-21", "ok", result)
 
         print(f"\n{Colors.BOLD}Maintenance Moderate Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")
@@ -515,11 +515,11 @@ class MaintenanceModule(BaseHardeningModule):
 
         # Configure file security
         result = self.configure_file_security("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("maintenance", "MAINT-11-13", "ok", result)
+        self.add_result("MAINT-11-13", "ok", result)
 
         # Configure user home directories
         result = self.configure_user_home_directories("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("maintenance", "MAINT-22-23", "ok", result)
+        self.add_result("MAINT-22-23", "ok", result)
 
         print(f"\n{Colors.BOLD}Maintenance Strict Policy Summary{Colors.END}")
         print(f"{Colors.BLUE}{'='*70}{Colors.END}")

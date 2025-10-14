@@ -6,7 +6,7 @@ Supports Ubuntu (20.04+) and CentOS (7+).
 """
 
 import subprocess
-from typing import Any, Dict, Tuple, List
+from typing import Any
 from .base import BaseHardeningModule, Colors
 
 
@@ -15,14 +15,14 @@ from .base import BaseHardeningModule, Colors
 class NetworkModule(BaseHardeningModule):
     id: str = "network"
 
-    def __init__(self, context: Dict[str, Any]) -> None:
+    def __init__(self, context: dict[str, Any]) -> None:
         super().__init__(context)
         self.logger = context["logger"]
         self.os_name: str = context.get("os_name", "unknown")
 
     # ---------------------- Utilities ----------------------
 
-    def run_cmd(self, cmd: str) -> Tuple[int, str]:
+    def run_cmd(self, cmd: str) -> tuple[int, str]:
         """Run shell command and return (return_code, output)."""
         try:
             result = subprocess.run(
@@ -292,17 +292,34 @@ class NetworkModule(BaseHardeningModule):
         self.logger.log("INFO", "Applying basic network policy")
 
         # Configure network devices
-        result = self.configure_network_devices("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("network", "NET-1-3", "ok", result)
+        if self.ctx.get("mode") == "audit":
+            net1_ok = self.configure_network_devices("check")
+        else:
+            net1_ok = self.configure_network_devices("check")
+            if not net1_ok:
+                net1_ok = self.configure_network_devices("enforce")
+        self.add_result("NET-1-3", "ok", net1_ok)
 
         # Configure network kernel modules
-        result = self.configure_network_kernel_modules("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("network", "NET-4-7", "ok", result)
+        if self.ctx.get("mode") == "audit":
+            net2_ok = self.configure_network_kernel_modules("check")
+        else:
+            net2_ok = self.configure_network_kernel_modules("check")
+            if not net2_ok:
+                net2_ok = self.configure_network_kernel_modules("enforce")
+        self.add_result("NET-4-7", "ok", net2_ok)
 
-        print(f"\n{Colors.BOLD}Network Basic Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
-        print(f"Network Devices: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"Network Kernel Modules: {Colors.GREEN}CONFIGURED{Colors.END}")
+        # Summary
+        if out:
+            print(f"\n{Colors.BOLD}Network Basic Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+            print(f"Network Devices: {Colors.GREEN}COMPLIANT{Colors.END}" if net1_ok else f"Network Devices: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"Network Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if net2_ok else f"Network Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            
+            if all([net1_ok, net2_ok]):
+                print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed basic network checks successfully!")
+            else:
+                print(f"{Colors.RED}[ERROR]{Colors.END} Basic network checks have non-compliances")
 
     def apply_moderate(self, out: bool = True) -> None:
         if out:
@@ -311,15 +328,32 @@ class NetworkModule(BaseHardeningModule):
 
         self.apply_basic(False)
 
-        # Configure basic network kernel parameters (critical ones)
-        result = self.configure_network_kernel_parameters("check" if self.ctx.get("mode") == "audit" else "enforce")
-        self.add_result("network", "NET-8-18", "ok", result)
+        # Configure network kernel parameters
+        if self.ctx.get("mode") == "audit":
+            net3_ok = self.configure_network_kernel_parameters("check")
+        else:
+            net3_ok = self.configure_network_kernel_parameters("check")
+            if not net3_ok:
+                net3_ok = self.configure_network_kernel_parameters("enforce")
+        self.add_result("NET-8-18", "ok", net3_ok)
 
-        print(f"\n{Colors.BOLD}Network Moderate Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
-        print(f"Network Devices: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"Network Kernel Modules: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"Network Kernel Parameters: {Colors.GREEN}CONFIGURED{Colors.END}")
+        # Summary
+        if out:
+            print(f"\n{Colors.BOLD}Network Moderate Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+            
+            # Re-check basic items for accurate summary
+            net1_ok = self.configure_network_devices("check")
+            net2_ok = self.configure_network_kernel_modules("check")
+            
+            print(f"Network Devices: {Colors.GREEN}COMPLIANT{Colors.END}" if net1_ok else f"Network Devices: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"Network Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if net2_ok else f"Network Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"Network Kernel Parameters: {Colors.GREEN}COMPLIANT{Colors.END}" if net3_ok else f"Network Kernel Parameters: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            
+            if all([net1_ok, net2_ok, net3_ok]):
+                print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed moderate network checks successfully!")
+            else:
+                print(f"{Colors.RED}[ERROR]{Colors.END} Moderate network checks have non-compliances")
 
     def apply_strict(self, out: bool = True) -> None:
         if out:
@@ -329,12 +363,24 @@ class NetworkModule(BaseHardeningModule):
         # Strict is same as moderate for network
         self.apply_moderate(False)
 
-        print(f"\n{Colors.BOLD}Network Strict Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
-        print(f"Network Devices: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"Network Kernel Modules: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"Network Kernel Parameters: {Colors.GREEN}CONFIGURED{Colors.END}")
-        print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed all strict network checks successfully!")
+        # Summary
+        if out:
+            print(f"\n{Colors.BOLD}Network Strict Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+            
+            # Re-check all items for accurate summary
+            net1_ok = self.configure_network_devices("check")
+            net2_ok = self.configure_network_kernel_modules("check")
+            net3_ok = self.configure_network_kernel_parameters("check")
+            
+            print(f"Network Devices: {Colors.GREEN}COMPLIANT{Colors.END}" if net1_ok else f"Network Devices: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"Network Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if net2_ok else f"Network Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"Network Kernel Parameters: {Colors.GREEN}COMPLIANT{Colors.END}" if net3_ok else f"Network Kernel Parameters: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            
+            if all([net1_ok, net2_ok, net3_ok]):
+                print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed all strict network checks successfully!")
+            else:
+                print(f"{Colors.RED}[ERROR]{Colors.END} Strict network checks have non-compliances")
 
     # ---------------------- Audit/Enforce Entry Points ----------------------
 
