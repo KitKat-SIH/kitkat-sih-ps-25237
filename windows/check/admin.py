@@ -1,20 +1,50 @@
 #!/usr/bin/env python3
+"""
+Administrator privilege helper
+Provides utility functions for checking and requesting admin privileges
+"""
+
+import ctypes
 import sys
-import pyuac
 import subprocess
+import os
 
-
-
-class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    WHITE = '\033[97m'
-    BOLD = '\033[1m'
-    END = '\033[0m'  
-
-@pyuac.main_requires_admin
 def admin():
-    print(f"Admin privelage   [{Colors.GREEN} YES {Colors.END}]\n")
+    """Request administrator privileges if not already running as admin"""
+    if is_user_admin():
+        print("Already running with administrator privileges.")
+        return True
+    else:
+        print("Administrator privileges required. Requesting elevation...")
+        return run_as_admin()
 
+def is_user_admin():
+    """Check if the current user has administrator privileges"""
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
+def run_as_admin():
+    """Attempt to restart the script with administrator privileges"""
+    try:
+        if sys.argv[-1] != 'asadmin':
+            script = os.path.abspath(sys.argv[0])
+            params = ' '.join([script] + sys.argv[1:] + ['asadmin'])
+            ctypes.windll.shell32.ShellExecuteW(
+                None, "runas", sys.executable, params, None, 1
+            )
+            return True
+        else:
+            return False
+    except:
+        print("Failed to request administrator privileges.")
+        return False
+
+if __name__ == "__main__":
+    if admin():
+        print("Administrator privileges confirmed.")
+    else:
+        print("Failed to obtain administrator privileges.")
+        input("Press Enter to exit...")
+        sys.exit(1)

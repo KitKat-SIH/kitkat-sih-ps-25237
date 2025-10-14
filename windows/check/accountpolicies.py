@@ -5,7 +5,6 @@ import re
 import platform
 import ctypes
 import sys
-import admin
 import time
 
 class Colors:
@@ -127,8 +126,7 @@ def check_password_policies(policy_data):
             current_value = int(match.group(1))
         except ValueError:
             current_value = match.group(1)
-        
-        # Check compliance based on the check type
+    
         is_compliant = False
         status_detail = ""
         
@@ -146,7 +144,7 @@ def check_password_policies(policy_data):
             is_compliant = current_value == config["expected_value"] and current_value != 0
             status_detail = f"Current: {current_value} days, Required: {config['expected_value']} days (not 0)"
         
-        # Display results
+        #results
         status_icon = f"{Colors.GREEN}[COMPLIANT]{Colors.END}" if is_compliant else f"{Colors.RED}[NON-COMPLIANT]{Colors.END}"
         
         print(f"{status_icon} {config['description']}")
@@ -156,7 +154,6 @@ def check_password_policies(policy_data):
         if is_compliant:
             compliant_count += 1
     
-    # Summary
     compliance_percentage = (compliant_count / total_checks) * 100
     
     if compliant_count == total_checks:
@@ -177,7 +174,7 @@ def check_password_policies(policy_data):
 def check_account_lockout_policies(policy_data):
     """Check all account lockout policy requirements"""
     
-    # Define account lockout policy checks
+    #checks
     lockout_checks = {
         "LockoutDuration": {
             "description": "Account lockout duration",
@@ -201,7 +198,7 @@ def check_account_lockout_policies(policy_data):
     total_checks = len(lockout_checks)
     
     for policy_key, config in lockout_checks.items():
-        # Search for the policy setting in the exported data
+        #searching
         pattern = rf"^{policy_key}\s*=\s*(\S+)"
         match = re.search(pattern, policy_data, re.MULTILINE | re.IGNORECASE)
         
@@ -210,14 +207,10 @@ def check_account_lockout_policies(policy_data):
             print(f"               Required: {config['requirement']}")
             print(f"               Status: Policy setting not found in export\n")
             continue
-        
-        # Get the current value
         try:
             current_value = int(match.group(1))
         except ValueError:
             current_value = match.group(1)
-        
-        # Check compliance based on the check type
         is_compliant = False
         status_detail = ""
         
@@ -229,7 +222,6 @@ def check_account_lockout_policies(policy_data):
             is_compliant = (current_value <= config["max_value"]) and (current_value != 0)
             status_detail = f"Current: {current_value} {config['unit']}, Required: {config['max_value']} or fewer {config['unit']} (not 0)"
         
-        # Display results
         status_icon = f"{Colors.GREEN}[COMPLIANT]{Colors.END}" if is_compliant else f"{Colors.RED}[NON-COMPLIANT]{Colors.END}"
         
         print(f"{status_icon} {config['description']}")
@@ -238,8 +230,7 @@ def check_account_lockout_policies(policy_data):
         
         if is_compliant:
             compliant_count += 1
-    
-    # Check for Administrator account lockout (this is typically a registry setting)
+
     print(f"{Colors.YELLOW}[MANUAL CHECK]{Colors.END} Allow Administrator account lockout")
     print(f"               Required: Enabled")
     print(f"               Status: Manual verification required")
@@ -279,27 +270,23 @@ def main():
     """Main function to orchestrate the policy checking"""
     print_banner()
     
-    # Check if running on Windows
     check_windows_os()
     
     if not is_admin():
         print(f"{Colors.RED}[ERROR]{Colors.END} Administrator privileges required")
-        admin.admin()
         sys.exit(1)
     
     print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Running with Administrator privileges")
     
-    # Export security policy
     temp_file = export_security_policy()
     if not temp_file:
         print(f"{Colors.RED}[FATAL]{Colors.END} Cannot proceed without security policy export")
         sys.exit(1)
     
     try:
-        # Parse policy data
+
         policy_data = parse_policy_data(temp_file)
         
-        # Check password policies
         password_compliant = check_password_policies(policy_data)
         
         lockout_compliant = check_account_lockout_policies(policy_data)
@@ -322,4 +309,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    time.sleep(3)
     subprocess.run(["python","localpolicies.py"])

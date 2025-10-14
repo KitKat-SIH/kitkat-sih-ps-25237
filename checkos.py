@@ -1,7 +1,7 @@
 import platform
 import time
 import socket
-import os
+import subprocess
 
 class Colors:
     GREEN = '\033[92m'
@@ -62,3 +62,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+    os_name = platform.system()
+    if os_name == "Windows":
+        subprocess.run(["python",r"windows\check\accountpolicies.py"])
+    elif os_name == "Linux":
+        subprocess.run(["python",r"linux/checkvuln.py"])

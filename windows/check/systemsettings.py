@@ -510,3 +510,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    time.sleep(3)
+    subprocess.run(["python","defenderapplication.py"])
