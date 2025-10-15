@@ -36,6 +36,8 @@ def build_parser() -> argparse.ArgumentParser:
     # Rollback / checkpoint system
     parser.add_argument("--checkpoint", metavar="NAME",
                         help="Create a named checkpoint before enforcement.")
+    parser.add_argument("--rollback", action="store_true",
+                        help="Rollback to before the last run.")
     parser.add_argument("--list-checkpoints", action="store_true",
                         help="List all available checkpoints.")
     parser.add_argument("--restore-checkpoint", metavar="NAME",
@@ -67,8 +69,7 @@ def detect_os() -> str:
         return "windows"
     elif system == "linux":
         try:
-            result = subprocess.run(["lsb_release", "-is"],
-                                    capture_output=True, text=True, check=False)
+            result = subprocess.run(["lsb_release", "-is"], capture_output=True, text=True, check=False)
             if result.returncode == 0:
                 distro = result.stdout.strip().lower()
                 if "ubuntu" in distro:
@@ -98,7 +99,7 @@ def main() -> None:
     # Determine mode precedence
     if args.list_checkpoints:
         mode = "list"
-    elif args.restore_checkpoint:
+    elif args.restore_checkpoint or args.rollback:
         mode = "restore"
     elif args.enforce:
         mode = "enforce"

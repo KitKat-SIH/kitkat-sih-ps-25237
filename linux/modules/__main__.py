@@ -20,15 +20,15 @@ from modules.maintenance import MaintenanceModule
 
 # List of all Linux module names (9 total, aligned with Annexure B)
 MODULES: list = [
+    FirewallModule,
+    BootProcessModule,
+    NetworkModule,
+    ServicesModule,
+    AccountsModule,
+    AccessControlModule,
+    AuditdModule,
+    MaintenanceModule,
     FilesystemModule,
-    # FirewallModule,
-    # BootProcessModule,
-    # NetworkModule,
-    # ServicesModule,
-    # AccountsModule,
-    # AccessControlModule,
-    # AuditdModule,
-    # MaintenanceModule,
 ]
 
 

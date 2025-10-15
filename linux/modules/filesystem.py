@@ -237,20 +237,21 @@ class FilesystemModule(BaseHardeningModule):
                 mods_ok = self.disable_filesystem_modules("enforce")
         self.add_result("FS-1-9", "ok", mods_ok)
 
-        # Configure /tmp - most critical (check then enforce if needed)
+        # Configure /dev/shm (check then enforce if needed)
         if self.ctx.get("mode") == "audit":
-            tmp_ok = self.configure_tmp("check")
+            devshm_ok = self.configure_dev_shm("check")
         else:
-            tmp_ok = self.configure_tmp("check")
-            if not tmp_ok:
-                tmp_ok = self.configure_tmp("enforce")
-        self.add_result("FS-10-13", "ok", tmp_ok)
-
-        print(f"\n{Colors.BOLD}Filesystem Basic Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
-        print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if tmp_ok else f"/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        if mods_ok and tmp_ok:
+            devshm_ok = self.configure_dev_shm("check")
+            if not devshm_ok:
+                devshm_ok = self.configure_dev_shm("enforce")
+        self.add_result("FS-14-17", "ok", devshm_ok)
+ 
+        if out:
+            print(f"\n{Colors.BOLD}Filesystem Basic Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+            print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/dev/shm Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if devshm_ok else f"/dev/shm Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+        if mods_ok and devshm_ok:
             print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed basic filesystem checks successfully!")
         else:
             print(f"{Colors.RED}[ERROR]{Colors.END} Basic filesystem checks have non-compliances")
@@ -260,7 +261,7 @@ class FilesystemModule(BaseHardeningModule):
             print(f"\n{Colors.BOLD}{Colors.BLUE}========== FILESYSTEM: MODERATE POLICY =========={Colors.END}")
         self.logger.log("INFO", "Applying moderate filesystem policy")
 
-        self.apply_basic(True)
+        self.apply_basic(False)
 
         # Configure /dev/shm (check then enforce if needed)
         if self.ctx.get("mode") == "audit":
@@ -280,15 +281,17 @@ class FilesystemModule(BaseHardeningModule):
                 home_ok = self.configure_home("enforce")
         self.add_result("FS-18-20", "ok", home_ok)
 
-        print(f"\n{Colors.BOLD}Filesystem Moderate Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+        if out:
+            print(f"\n{Colors.BOLD}Filesystem Moderate Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
         # Re-check basic items for accurate summary
         mods_ok = self.disable_filesystem_modules("check")
         tmp_ok = self.configure_tmp("check")
-        print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if tmp_ok else f"/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/dev/shm Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if devshm_ok else f"/dev/shm Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/home Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if home_ok else f"/home Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+        if out:
+            print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if tmp_ok else f"/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/dev/shm Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if devshm_ok else f"/dev/shm Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/home Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if home_ok else f"/home Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
         if all([mods_ok, tmp_ok, devshm_ok, home_ok]):
             print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed moderate filesystem checks successfully!")
         else:
@@ -299,7 +302,7 @@ class FilesystemModule(BaseHardeningModule):
             print(f"\n{Colors.BOLD}{Colors.BLUE}========== FILESYSTEM: STRICT POLICY =========={Colors.END}")
         self.logger.log("INFO", "Applying strict filesystem policy")
 
-        self.apply_moderate(True)
+        self.apply_moderate(False)
 
         # Configure /var (check then enforce if needed)
         if self.ctx.get("mode") == "audit":
@@ -337,21 +340,24 @@ class FilesystemModule(BaseHardeningModule):
                 varlogaudit_ok = self.configure_var_log_audit("enforce")
         self.add_result("FS-32-35", "ok", varlogaudit_ok)
 
-        print(f"\n{Colors.BOLD}Filesystem Strict Policy Summary{Colors.END}")
-        print(f"{Colors.BLUE}{'='*70}{Colors.END}")
+        if out:
+            print(f"\n{Colors.BOLD}Filesystem Strict Policy Summary{Colors.END}")
+            print(f"{Colors.BLUE}{'='*70}{Colors.END}")
         # Re-check earlier items for accurate summary
         mods_ok = self.disable_filesystem_modules("check")
         tmp_ok = self.configure_tmp("check")
         devshm_ok = self.configure_dev_shm("check")
         home_ok = self.configure_home("check")
-        print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if tmp_ok else f"/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/dev/shm Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if devshm_ok else f"/dev/shm Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/home Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if home_ok else f"/home Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/var Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if var_ok else f"/var Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/var/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if vartmp_ok else f"/var/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/var/log Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if varlog_ok else f"/var/log Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
-        print(f"/var/log/audit Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if varlogaudit_ok else f"/var/log/audit Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+        
+        if out:
+            print(f"Kernel Modules: {Colors.GREEN}COMPLIANT{Colors.END}" if mods_ok else f"Kernel Modules: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if tmp_ok else f"/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/dev/shm Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if devshm_ok else f"/dev/shm Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/home Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if home_ok else f"/home Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/var Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if var_ok else f"/var Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/var/tmp Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if vartmp_ok else f"/var/tmp Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/var/log Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if varlog_ok else f"/var/log Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
+            print(f"/var/log/audit Partition: {Colors.GREEN}COMPLIANT{Colors.END}" if varlogaudit_ok else f"/var/log/audit Partition: {Colors.RED}NON-COMPLIANT{Colors.END}")
         if all([mods_ok, tmp_ok, devshm_ok, home_ok, var_ok, vartmp_ok, varlog_ok, varlogaudit_ok]):
             print(f"{Colors.GREEN}[SUCCESS]{Colors.END} Completed all strict filesystem checks successfully!")
         else:
