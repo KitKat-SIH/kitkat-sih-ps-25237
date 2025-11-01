@@ -1,3 +1,2 @@
-# <insert name here nigga>
-
-- SIH25237
+Add your names here:
+- Aaradhya Bhardwaj
